@@ -1,0 +1,19 @@
+{
+  "name": "clase2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "1.http.js",
+  "scripts": {
+    "dev:2":"node --watch 2.routing.js",
+    "dev:3": "node --watch 3.express.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "standard": "17.1.0"
+  },
+  "eslintConfig": {
+    "extends": "standard"
+  }
+}

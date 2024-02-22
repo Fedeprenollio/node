@@ -1,0 +1,34 @@
+{
+  "name": "curso-node",
+  "version": "1.0.0",
+  "description": "Curso",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fedeprenollio/node.git"
+  },
+  "keywords": [
+    "curso",
+    "node",
+    "js"
+  ],
+  "author": "Federico Prenollio",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Fedeprenollio/node/issues"
+  },
+  "homepage": "https://github.com/Fedeprenollio/node#readme",
+  "dependencies": {
+    "picocolors": "1.0.0"
+  },
+  "devDependencies": {
+    "standard": "17.1.0"
+  }
+  ,
+  "eslintConfig": {
+    "extends":"./node_modules/standard/esLintrc.json"
+  }
+}
