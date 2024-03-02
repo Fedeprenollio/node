@@ -6,6 +6,7 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script type="module">
+      let socket;
       function obtenerHoraConFormato() {
         const fecha = new Date();
         let horas = fecha.getHours();
@@ -24,113 +25,165 @@
 
         return horaConFormato;
       }
-
+      const getColor = () => {
+        const COLORES = [
+          "#1ABC9C", // Turquesa
+          "#3498DB", // Azul fuerte
+          "#9B59B6", // Amatista
+          "#E74C3C", // Rojo fuerte
+          "#2ECC71", // Esmeralda
+          "#F1C40F", // Amarillo brillante
+          "#E67E22", // Naranja fuerte
+          "#34495E", // Gris azulado
+          "#95A5A6", // Gris claro
+          "#D35400", // Zanahoria oscuro
+        ];
+        const indiceAleatorio = Math.floor(Math.random() * COLORES.length);
+        const colorAleatorio = COLORES[indiceAleatorio];
+        return colorAleatorio;
+      };
       const formUser = document.getElementById("formUser");
 
       const horaActual = obtenerHoraConFormato();
-      let socket 
-     
 
+      document.getElementById(
+        "currentName"
+      ).innerHTML = `<span>Mi nombre actual es: <strong> ${
+        localStorage.getItem("username") ?? "Anónimo"
+      }  </strong> </span>`;
       const getUserName = async () => {
         let username = localStorage.getItem("username");
         let userId = localStorage.getItem("userId");
-        const userColor = ["red", "green", "orange", "yellow", "blue"];
+        let avatar = localStorage.getItem("avatar");
+        let color = localStorage.getItem("color");
 
-        formUser.addEventListener("submit",async (e) => {
+        formUser.addEventListener("submit", async (e) => {
           e.preventDefault();
-          console.log(inputUser.value);
+
           username = inputUser.value;
           localStorage.setItem("username", username);
-        
+          const curretNameUser = `<span>Mi nombre actual es: <strong> ${
+            username ?? "Anónimo"
+          } </strong> </span>`;
+          document.getElementById("currentName").innerHTML = curretNameUser;
           socket = await initializeSocket();
         });
 
-        if (username && userId) {
-          console.log(`User existed ${username}, ${userId}`);
-          return { username, userId };
+        if (username && userId && avatar && color) {
+          return { username, userId, avatar, color };
         }
 
         const resUser = await fetch(
           "https://random-data-api.com/api/users/random_user"
         );
         const newUser = await resUser.json();
-        // username = newUser.username;
 
-        console.log(username);
+        avatar = newUser.avatar;
         userId = newUser.uid;
+        color =  getColor()
         localStorage.setItem("username", username);
         localStorage.setItem("userId", userId);
-        return { username, userId };
+        localStorage.setItem("avatar", avatar);
+        localStorage.setItem("color",color);
+
+        return { username, userId, avatar, color };
       };
 
       const initializeSocket = async () => {
-        const { username, userId } = await getUserName();
-        console.log("Socket inicializado por:", username)
+        const { username, userId, avatar, color } = await getUserName();
+
         const socket = io({
           auth: {
             serverOffset: 0,
             username,
             userId,
+            avatar,
+            color: color,
           },
         });
-        const curretNameUser = `<span>Mi nombre actual es: <strong> ${username} </strong> </span>`
-        document.getElementById("currentName").innerHTML =curretNameUser ;
+
         return socket;
       };
 
-       socket = await initializeSocket();
+      socket = await initializeSocket();
       const form = document.getElementById("form");
       const inputUser = document.getElementById("inputUser");
       const input = document.getElementById("input");
       const messages = document.getElementById("messages");
 
-      socket.on("chat message", ({texto: msg, rowId: serverOffset, username, userId, timeMsg}) => {
-        socket.auth.serverOffset = serverOffset;
+      socket.on(
+        "chat message",
+        ({
+          texto: msg,
+          rowId: serverOffset,
+          username,
+          userId,
+          timeMsg,
+          avatar,
+          color,
+        }) => {
+          socket.auth.serverOffset = serverOffset;
 
-        //crear user
-        const Newuser = 0;
-        const item = document.createElement("div");
-        item.classList.add("conteinerItem");
+          //crear user
+          const Newuser = 0;
+          const item = document.createElement("div");
+          item.classList.add("conteinerItem");
 
-        const conteinerData = document.createElement("div");
-        const conteinerInfoData = document.createElement("div");
-        const conteinerTime = document.createElement("div");
+          const conteinerData = document.createElement("div");
+          const conteinerInfoData = document.createElement("div");
+          const conteinerTime = document.createElement("div");
 
-        const user = document.createElement("span");
-        const p = document.createElement("span");
-        const time = document.createElement("span");
+          const user = document.createElement("span");
+          const p = document.createElement("span");
+          const time = document.createElement("span");
 
-        messages.appendChild(item);
-        item.appendChild(conteinerData);
-        conteinerData.appendChild(conteinerInfoData);
-        conteinerInfoData.appendChild(user);
-        
+          messages.appendChild(item);
+          item.appendChild(conteinerData);
+          conteinerData.appendChild(conteinerInfoData);
+          conteinerInfoData.appendChild(user);
 
-        conteinerInfoData.appendChild(p);
-        conteinerData.appendChild(conteinerTime);
-        conteinerTime.appendChild(time);
+          conteinerInfoData.appendChild(p);
+          conteinerData.appendChild(conteinerTime);
+          conteinerTime.appendChild(time);
 
-        user.textContent = `${username}`;
-        p.textContent = msg;
-        time.textContent =timeMsg
+          user.textContent = `${username}`;
+          user.style.color = color;
+          p.textContent = msg;
+          time.textContent = timeMsg;
 
-        conteinerTime.classList.add("containerTime");
-        time.classList.add("time");
-        user.classList.add("user");
-        p.classList.add("p");
-        conteinerInfoData.classList.add("conteinerInfoData");
-        if (userId === socket.auth.userId) {
-          item.classList.add("item-my-msg");
-          conteinerData.classList.add("containerData-my-msg");
-          conteinerInfoData.removeChild(user);
-        } else {
-          item.classList.add("item-no-my-msg");
-          conteinerData.classList.add("containerData-no-my-msg");
+          conteinerTime.classList.add("containerTime");
+          time.classList.add("time");
+          user.classList.add("user");
+          p.classList.add("p");
+          conteinerInfoData.classList.add("conteinerInfoData");
+          console.log(avatar);
+          if (userId === socket.auth.userId) {
+            const htmlImg = `<img class="my-avatar" src="${
+              avatar
+                ? avatar
+                : "https://robohash.org/corruptiquaedebitis.png?size=300x300&set=set1"
+            }" alt="MDN" />`;
+            item.insertAdjacentHTML("beforeend", htmlImg);
+
+            item.classList.add("item-my-msg");
+            conteinerData.classList.add("containerData-my-msg");
+            conteinerInfoData.removeChild(user);
+          } else {
+            const htmlImg = `<img class="other-avatar" src="${
+              avatar
+                ? avatar
+                : "https://robohash.org/corruptiquaedebitis.png?size=300x300&set=set1"
+            }" alt="MDN" />`;
+            item.insertAdjacentHTML("afterbegin", htmlImg);
+
+            item.classList.add("item-no-my-msg");
+            conteinerData.classList.add("containerData-no-my-msg");
+          }
+
+          messages.scrollTop = messages.scrollHeight;
+          // messages.scrollTo(0, document.body.scrollHeight);
         }
-
-        messages.scrollTop = messages.scrollHeight;
-        // messages.scrollTo(0, document.body.scrollHeight);
-      });
+      );
       // socket.on("chat message", (msg, serverOffset, username) => {
       //   const item = `<li>
       //   <p>${msg}</p>
@@ -147,7 +200,7 @@
         if (input.value) {
           const timeMsg = obtenerHoraConFormato();
 
-          socket.emit("chat message", {texto : input.value, timeMsg});
+          socket.emit("chat message", { texto: input.value, timeMsg });
           input.value = "";
         }
       });
@@ -243,7 +296,7 @@
       }
 
       .conteinerItem {
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 0rem;
       }
       /* .conteinerItem:nth-child(odd) {
         background: #f7ecec;
@@ -328,6 +381,19 @@
         text-align: end;
         padding-top: -2px;
         margin-top: -2px;
+      }
+
+      .my-avatar {
+        border-radius: 100%;
+        height: 50px;
+        width: auto;
+        margin-right: 1px;
+      }
+      .other-avatar {
+        border-radius: 100%;
+        height: 50px;
+        width: auto;
+        margin-left: 1px;
       }
     </style>
     <title>Chat</title>

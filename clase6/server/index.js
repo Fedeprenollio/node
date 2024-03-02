@@ -17,7 +17,9 @@ await db.execute(
   content TEXT,
   username TEXT,
   userId TEXT,
-  time TEXT
+  avatar TEXT,
+  time TEXT,
+  color TEXT
 )`
 )
 
@@ -41,28 +43,30 @@ io.on('connection', async (socket) => {
     let result
     const username = socket.handshake.auth.username ?? 'anonymus'
     const userId = socket.handshake.auth.userId
+    const avatar = socket.handshake.auth.avatar
+    const color = socket.handshake.auth.color
+    console.log(color)
     try {
       result = await db.execute({
-        sql: 'INSERT INTO messages (content, username, userId, time) VALUES (:messages , :username, :userId, :time)',
-        args: { messages: msg, username, userId, time: timeMsg }
+        sql: 'INSERT INTO messages (content, username, userId, time, avatar, color) VALUES (:messages , :username, :userId, :time, :avatar, :color)',
+        args: { messages: msg, username, userId, time: timeMsg, avatar, color }
       })
     } catch (error) {
       console.error(error)
       return
     }
 
-    io.emit('chat message', { texto: msg, rowId: result.lastInsertRowid.toString(), username, userId, timeMsg })
+    io.emit('chat message', { texto: msg, rowId: result.lastInsertRowid.toString(), username, userId, timeMsg, avatar, color })
   })
 
   if (!socket.recovered) {
-    console.log('ENtro?')
     try {
       const result = await db.execute({
-        sql: 'SELECT id, content, username, userId, time FROM messages WHERE id > ?',
+        sql: 'SELECT * FROM messages WHERE id > ?',
         args: [socket.handshake.auth.serverOffset ?? 0]
       })
       result.rows.forEach(row => {
-        socket.emit('chat message', { texto: row.content, rowId: row.id.toString(), username: row.username, userId: row.userId, timeMsg: row.time })
+        socket.emit('chat message', { texto: row.content, rowId: row.id.toString(), username: row.username, userId: row.userId, timeMsg: row.time, avatar: row.avatar, color: row.color })
       })
     } catch (error) {
       console.error(error)
